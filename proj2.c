@@ -124,11 +124,11 @@ static int store_value(int val) {
 	// xarray
 	xa_store(&xarray_tree, position, temp_xarray, GFP_KERNEL);
 	position++;
-  printk(KERN_INFO "%i", position);
+  	//printk(KERN_INFO "%i", position);
 	return 0;
 }
 
-static void all_(int number[], int size, char every[], int conf){
+/*static void all_(int number[], int size, char every[], int conf){
 	int i = 0, j = 0, q = 1024, z = 0;
   char* link = NULL;
 	size_t n = size;
@@ -193,6 +193,20 @@ static void all_(int number[], int size, char every[], int conf){
 	// }
 	// printk(KERN_CONT " %i\n", number[n-1]);
 }
+*/
+void all_(int pose, int value, char every[]){
+
+	int j = 0;
+	if(gone+3 < (1048 - 1)){
+		if(!pose){
+			j += sprintf(&every[gone], ",");
+			printk(KERN_CONT ",");
+		}
+		j += sprintf(&every[j+gone], " %i", value);
+		printk(KERN_CONT " %i",value);
+	}
+	gone += j;
+}
 
 static void test_all(char numero[]){
   struct list_entry *temp_list;
@@ -200,56 +214,99 @@ static void test_all(char numero[]){
 	struct rb_node *temp_redblack;
 	struct radix_entry *temp_radix;
 	struct xarray_entry *temp_xarray;
-	int number[count];
-	int j = 0, tor = 0;
-
+	int j = 0, tor = 1;
+	char* linked = NULL;
+	
 	// "Elements in the linked list below"
+	printk(KERN_CONT "Linked list: ");
+	linked = (char *) "Linked list:";
+	while((numero[gone++]=*linked)!= ':' && gone < (1023)) 
+	{
+		++linked;
+	}
+	linked = NULL;
 	list_for_each_entry(temp_list, &mylist, list){
-		number[tor] = temp_list->val;
-		tor++;
+		all_(tor,temp_list->val,numero);
+		tor=0;
 	}
-	all_(number, count, numero, 1);
+	tor = 1;
+	printk(KERN_INFO "");
+	numero[gone++] = '\n';
+	
 
-	tor = 0;
 	// "Elements in the hash list below"
-	hash_for_each(myhash, j, temp_hash, hash){
-		number[tor] = temp_hash->val;
-		tor++;
+	printk(KERN_CONT "Hash table: ");
+	linked = (char *) "Hash table:";
+	while((numero[gone++]=*linked)!= ':' && gone < (1023)) 
+	{
+		++linked;
 	}
-  all_(number, count, numero, 2);
+	linked = NULL;
+	hash_for_each(myhash, j, temp_hash, hash){
+		all_(tor,temp_hash->val,numero);
+		tor=0;
+	}
+	tor = 1;
+	printk(KERN_INFO "");
+	numero[gone++] = '\n';
 
-	tor = 0;
 	// "Elements in the red black tree below"
+	printk(KERN_CONT "Red-black tree: ");
+	linked = (char *) "Red-black tree:";
+	while((numero[gone++]=*linked)!= ':' && gone < (1023)) 
+	{
+		++linked;
+	}
+	linked = NULL;
 	for(temp_redblack = rb_first(&redblack_tree); temp_redblack; temp_redblack = rb_next(temp_redblack)){
 		struct redblack_entry *tmp = rb_entry(temp_redblack, struct redblack_entry, node);
-		number[tor] = tmp->val;
-		tor++;
+		all_(tor,tmp->val,numero);
+		tor=0;
+		
 	}
-  all_(number, count, numero, 3);
+  	tor = 1;
+	printk(KERN_INFO "");
+	numero[gone++] = '\n';
 
-	tor = 0;
 	// "Elements in the radix tree below";
+	printk(KERN_CONT "Radix tree: ");
+	linked = (char *) "Radix tree:";
+	while((numero[gone++]=*linked)!= ':' && gone < (1023)) 
+	{
+		++linked;
+	}
+	linked = NULL;
 	j =0;
 	temp_radix = radix_tree_lookup(&radix_tree, j++);
 	while(temp_radix){
-		number[tor] = temp_radix->val;
-		tor++;
+		all_(tor,temp_radix->val,numero);
+		tor=0;
 		temp_radix = radix_tree_lookup(&radix_tree, j++);
 		if(j > count) break;
 	}
-  all_(number, count, numero, 4);
+  	tor = 1;
+	printk(KERN_INFO "");
+	numero[gone++] = '\n';
 
-	tor = 0;
 	// "Elements in the xarray below";
+	printk(KERN_CONT "XArray: ");
+	linked = (char *) "XArray:";
+	while((numero[gone++]=*linked)!= ':' && gone < (1023)) 
+	{
+		++linked;
+	}
+	linked = NULL;
 	j =0;
 	temp_xarray = xa_load(&xarray_tree, j++);
 	while(temp_xarray){
-		number[tor] = temp_xarray->val;
-		tor++;
+		all_(tor,temp_xarray->val,numero);
+		tor=0;
 		temp_xarray = xa_load(&xarray_tree, j++);
 		if(j > count) break;
 	}
-  all_(number, count, numero, 5);
+  	tor = 1;
+	printk(KERN_INFO "");
+	numero[gone++] = '\n';
   return;
 }
 
@@ -295,17 +352,19 @@ static void destroy_all(void)
 
 	// "Destroying the rabix tree"
 	k = 0;
-	do{
+	while(temp_r && k < count)
+	{
 		temp_r = radix_tree_delete(&radix_tree, k++);
 		kfree(temp_r);
-	}while(temp_r && k < count);
+	}
 
 	// "Destroying the xarray";
 	k = 0;
-	do{
+	while(temp_x && k < count)
+	{
 		temp_x = xa_erase(&xarray_tree, k++);
 		kfree(temp_x);
-	}while(temp_x && k < count);
+	}
 
 }
 
@@ -353,10 +412,7 @@ static int __init proj2_init(void)
 	int err = 0;
 
 	proj2_d = proc_create("proj2", 0666, NULL, &fops);
-  if (!proj2_d) {
-		printk(KERN_INFO "eter, exiting\n");
-		return -1;
-	}
+	
 	if (!int_str) {
 		printk(KERN_INFO "Missing \'int_str\' parameter, exiting\n");
 		return -1;
