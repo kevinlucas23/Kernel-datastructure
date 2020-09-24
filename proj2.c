@@ -32,7 +32,7 @@ module_param(int_str, charp, S_IRUSR | S_IRGRP | S_IROTH);
 MODULE_PARM_DESC(int_str, "A comma-separated list of integers");
 
 // to count the number of entries inserted in the data structure
-static int count = 0;
+static int count = 0, gone = 0;
 
 // Proc file system entry
 static struct proc_dir_entry *proj2_d;
@@ -124,19 +124,77 @@ static int store_value(int val) {
 	// xarray
 	xa_store(&xarray_tree, position, temp_xarray, GFP_KERNEL);
 	position++;
+  printk(KERN_INFO "%i", position);
 	return 0;
 }
 
-static void all_(int number[], int size){
-	int i;
+static void all_(int number[], int size, char every[], int conf){
+	int i = 0, j = 0, q = 1024, z = 0;
+  char* link = NULL;
 	size_t n = size;
-	for(i = 0; i < (n - 1); ++i){
-		printk(KERN_CONT " %i,", number[i]);
-	}
-	printk(KERN_CONT " %i\n", number[n-1]);
+  if(conf = 1){
+    link = (char* ) "Linked list:";
+    printf(KERN_CONT "Linked list:");
+    while((every[gone++]=*link) != ':' && gone < (q - 1)){
+      ++link;
+    }
+    link = NULL;
+  }
+  if(conf = 2){
+    link = (char* ) "Hash table:";
+    printf(KERN_CONT "Hash table:");
+    while((every[gone++]=*link) != ':' && gone < (q - 1)){
+      ++link;
+    }
+    link = NULL;
+  }
+  if(conf = 3){
+    link = (char* ) "Red-black tree:";
+    printf(KERN_CONT "Red-black tree:");
+    while((every[gone++]=*link) != ':' && gone < (q - 1)){
+      ++link;
+    }
+    link = NULL;
+  }
+  if(conf = 4){
+    link = (char* ) "Radix tree:";
+    printf(KERN_CONT "Radix tree:");
+    while((every[gone++]=*link) != ':' && gone < (q - 1)){
+      ++link;
+    }
+    link = NULL;
+  }
+  if(conf = 5){
+    link = (char* ) "XArray:";
+    printf(KERN_CONT "XArray:");
+    while((every[gone++]=*link) != ':' && gone < (q - 1)){
+      ++link;
+    }
+    link = NULL;
+  }
+  while(gone + 3 < (q - 1)){
+    if(j == 3){
+      z += sprintf(&every[gone], ",");
+      printk(KERN_CONT ",");
+      j = 0;
+    }
+    else{
+      if(i == n) break;
+      z += sprintf(&every[gone], " %i", number[i]);
+      printk(KERN_CONT " %i", number[i]);
+      i++;
+      j = 3;
+    }
+  }
+  every[gone++] = '\n';
+  printk(KERN_CONT "\n");
+	// for(i = 0; i < (n - 1); ++i){
+	// 	printk(KERN_CONT "%i,", number[i]);
+	// }
+	// printk(KERN_CONT " %i\n", number[n-1]);
 }
 
-static void test_all(void){
+static void test_all(char numero[]){
   struct list_entry *temp_list;
 	struct hash_entry *temp_hash;
 	struct rb_node *temp_redblack;
@@ -146,35 +204,31 @@ static void test_all(void){
 	int j = 0, tor = 0;
 
 	// "Elements in the linked list below"
-	printk(KERN_CONT "Linked list:");
 	list_for_each_entry(temp_list, &mylist, list){
 		number[tor] = temp_list->val;
 		tor++;
 	}
-	all_(number, count);
+	all_(number, count, numero, 1);
 
 	tor = 0;
 	// "Elements in the hash list below"
-	printk(KERN_CONT "Hash table:");
 	hash_for_each(myhash, j, temp_hash, hash){
 		number[tor] = temp_hash->val;
 		tor++;
 	}
-	all_(number, count);
+  all_(number, count, numero, 2);
 
 	tor = 0;
 	// "Elements in the red black tree below"
-	printk(KERN_CONT "Red-black tree:");
 	for(temp_redblack = rb_first(&redblack_tree); temp_redblack; temp_redblack = rb_next(temp_redblack)){
 		struct redblack_entry *tmp = rb_entry(temp_redblack, struct redblack_entry, node);
 		number[tor] = tmp->val;
 		tor++;
 	}
-	all_(number, count);
+  all_(number, count, numero, 3);
 
 	tor = 0;
 	// "Elements in the radix tree below";
-	printk(KERN_CONT "Radix tree:");
 	j =0;
 	temp_radix = radix_tree_lookup(&radix_tree, j++);
 	while(temp_radix){
@@ -183,11 +237,10 @@ static void test_all(void){
 		temp_radix = radix_tree_lookup(&radix_tree, j++);
 		if(j > count) break;
 	}
-	all_(number, count);
+  all_(number, count, numero, 4);
 
 	tor = 0;
 	// "Elements in the xarray below";
-	printk(KERN_CONT "XArray:");
 	j =0;
 	temp_xarray = xa_load(&xarray_tree, j++);
 	while(temp_xarray){
@@ -196,8 +249,19 @@ static void test_all(void){
 		temp_xarray = xa_load(&xarray_tree, j++);
 		if(j > count) break;
 	}
-	all_(number, count);
+  all_(number, count, numero, 5);
   return;
+}
+
+ssize_t p2_read(struct file *filep, char __user *buf, size_t len, loff_t *off){
+  char bufl[1024];
+  int k = 0;
+  if((*off) > 0) return 0;
+  test_all(bufl);
+  k = gone;
+  if(copy_to_user(buf,bufl,k) > 0) return -EFAULT;
+  (*off) += k;
+  return k
 }
 
 static void destroy_all(void)
@@ -273,13 +337,6 @@ static int parse_params(void)
 	return err;
 }
 
-
-static void run_tests(void)
-{
-	test_all();
-	//test_rb_tree_list();
-}
-
 static void cleanup(void)
 {
 	printk(KERN_INFO "\nCleaning up...\n");
@@ -287,31 +344,35 @@ static void cleanup(void)
 	//destroy_rb_tree_list_and_free();
 }
 
+const struct proc_ops fops = {
+  .proc_read = p2_read,
+};
+
 static int __init proj2_init(void)
 {
 	int err = 0;
 
-	// proj2_d = proc_create("proj2", 0666, NULL,
+	proj2_d = proc_create("proj2", 0666, NULL, &fops);
+  if (!proj2_d) {
+		printk(KERN_INFO "eter, exiting\n");
+		return -1;
+	}
 	if (!int_str) {
 		printk(KERN_INFO "Missing \'int_str\' parameter, exiting\n");
 		return -1;
 	}
 
 	err = parse_params();
-	if (err)
-		goto out;
 
-	run_tests();
-out:
-
-	cleanup();
 	return err;
 }
 
 
 static void __exit proj2_exit(void)
 {
-	// remove_proc_entry("proj2",NULL);
+	remove_proc_entry("proj2",NULL);
+  cleanup();
+
 	return;
 }
 
