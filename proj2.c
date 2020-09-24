@@ -132,41 +132,41 @@ static void all_(int number[], int size, char every[], int conf){
 	int i = 0, j = 0, q = 1024, z = 0;
   char* link = NULL;
 	size_t n = size;
-  if(conf = 1){
+  if(conf == 1){
     link = (char* ) "Linked list:";
-    printf(KERN_CONT "Linked list:");
+    printk(KERN_CONT "Linked list:");
     while((every[gone++]=*link) != ':' && gone < (q - 1)){
       ++link;
     }
     link = NULL;
   }
-  if(conf = 2){
+  if(conf == 2){
     link = (char* ) "Hash table:";
-    printf(KERN_CONT "Hash table:");
+    printk(KERN_CONT "Hash table:");
     while((every[gone++]=*link) != ':' && gone < (q - 1)){
       ++link;
     }
     link = NULL;
   }
-  if(conf = 3){
+  if(conf == 3){
     link = (char* ) "Red-black tree:";
-    printf(KERN_CONT "Red-black tree:");
+    printk(KERN_CONT "Red-black tree:");
     while((every[gone++]=*link) != ':' && gone < (q - 1)){
       ++link;
     }
     link = NULL;
   }
-  if(conf = 4){
+  if(conf == 4){
     link = (char* ) "Radix tree:";
-    printf(KERN_CONT "Radix tree:");
+    printk(KERN_CONT "Radix tree:");
     while((every[gone++]=*link) != ':' && gone < (q - 1)){
       ++link;
     }
     link = NULL;
   }
-  if(conf = 5){
+  if(conf == 5){
     link = (char* ) "XArray:";
-    printf(KERN_CONT "XArray:");
+    printk(KERN_CONT "XArray:");
     while((every[gone++]=*link) != ':' && gone < (q - 1)){
       ++link;
     }
@@ -261,7 +261,7 @@ ssize_t p2_read(struct file *filep, char __user *buf, size_t len, loff_t *off){
   k = gone;
   if(copy_to_user(buf,bufl,k) > 0) return -EFAULT;
   (*off) += k;
-  return k
+  return k;
 }
 
 static void destroy_all(void)
